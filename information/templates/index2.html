@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+          integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+
+    <!-- chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+
+    <!-- highcharts js -->
+    <script src="https://code.highcharts.com/maps/highmaps.js"></script>
+    <script src="https://code.highcharts.com/maps/modules/data.js"></script>
+    <script src="https://code.highcharts.com/maps/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/maps/modules/offline-exporting.js"></script>
+    <script src="https://code.highcharts.com/mapdata/custom/world.js"></script>
+
+    <!-- highcharts css -> Flag sprites service provided by Martijn Lafeber, https://github.com/lafeber/world-flags-sprite/blob/master/LICENSE -->
+    <link rel="stylesheet" type="text/css" href="//github.com/downloads/lafeber/world-flags-sprite/flags32.css" />
+
+    <title>Covid-19 Dashboard</title>
+</head>
+<body>
+<nav class="navbar navbar-dark bg-dark" style="font-size: larger; color: aliceblue">Covid-19 Dashboard</nav>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-4" style="float: left; overflow:scroll; width:400px; height:750px;">
+            <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Total
+                Cases: {{total_count}}
+            </div>
+            <div class="col-4" style="float: left;">
+                <div>
+                     <form method="post" enctype="multipart/form-data" action="selectCountry">
+                        {% csrf_token %}
+                         {% for country in country_names %}
+                        {% if country == 'United Kingdom' %}
+                            <input type="submit" value='UK' name="country" style="width: 100px; font-size: x-small">
+                        {% else %}
+                            <input type="submit" value={{country}} name="country" style="width: 100px; font-size: x-small">
+                        {% endif %}
+                         {% endfor %}
+                     </form>
+                </div>
+            </div>
+            <div class="col-8" style="float: left;">
+                <canvas id="myChart" style="height: 5050px; width:240px;"></canvas>
+            </div>
+        </div>
+        <div class="col-8" style="float: left">
+            <br>
+            <br>
+            <h4 style="text-align: center;">Analysis on {{specific_country}}</h4>
+                <canvas id="lineChart" style="height: 200px; width: 300px;"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- js for the bar chart -->
+<script>
+    let ctx = document.getElementById('myChart').getContext('2d');
+    let chartOptions = {
+        legend: {
+            display: false
+        },
+
+        scales: {
+            xAxes: [{
+                barPercentage: 1
+            }],
+            yAxes: [
+                {ticks: {display: false}},
+                {display: false},
+            ],
+            elements: {
+                rectangle: {
+                    borderSkipped: 'left',
+                }
+            }
+        }
+    };
+
+    let chart = new Chart(ctx, {
+        // The type of chart we want to create
+        type: 'horizontalBar',
+
+        // The data for our dataset
+        data: {
+            labels: {{country_names | safe}},
+        datasets: [{
+            label: 'Confirmed Cases',
+            backgroundColor: 'rgb(255, 51, 51)',
+            borderColor: 'rgb(255, 51, 51)',
+         data: {{bar_plot_values | safe}}
+        }]
+    },
+
+        // Configuration options go here
+        options: chartOptions
+    });
+</script>
+
+<script>
+    let chartOptions2 = {
+            legend: {
+                display: true
+                    },
+                    scales: {
+						yAxes: [{
+							type: 'linear', // only linear but allow scale type registration. This allows extensions to exist solely for log scale for instance
+							display: true,
+							position: 'left',
+							id: 'y-axis-1',
+						}, {
+							type: 'linear', // only linear but allow scale type registration. This allows extensions to exist solely for log scale for instance
+							display: false,
+							position: 'right',
+							id: 'y-axis-2',
+						}],
+					},
+        };
+    let ctx2 = document.getElementById('lineChart').getContext('2d');
+	let myLineChart = new Chart(ctx2, {
+        type: 'line',
+        data: {labels:{{axis_values|safe}}, datasets: {{data_for_line|safe}}},
+
+        options: chartOptions2
+        });
+</script>
+
+
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+        integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+        crossorigin="anonymous"></script>
+</body>
+</html>
